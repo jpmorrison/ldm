@@ -22,12 +22,18 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+
+#ifdef __CYGWIN__ 
+#define __off64_t _off64_t
+#define lseek64 lseek
+#endif
 
 int main (int argc, char *argv[])
 {
@@ -41,14 +47,18 @@ int main (int argc, char *argv[])
 	__off64_t off;
 
 	if (argc != 5) {
-		printf ("\nUsage:\n\t%s part data sectors output\n\n", basename (argv[0]));
+		printf ("\nUsage:\n\t%s part ldm sect output\n\n", basename (argv[0]));
+		printf ("\tpart:\tpartition table/boot sector file\n");
+		printf ("\tldm:\tLDM database file (1 MB written at end of disk)\n");
+		printf ("\tsect:\tsize of sparse disk (512 byte sectors)\n");
+		printf ("\toutput:\tfile for Windows/LDM dynamic disk image\n\n");
 		return 1;
 	}
 
 	part = argv[1];
 	data = argv[2];
 	out  = argv[4];
-	off  = atol (argv[3]);
+	off  = atoll (argv[3]);
 
 	if (off == 0) {
 		printf ("Sectors must be non-zero\n");
@@ -57,6 +67,8 @@ int main (int argc, char *argv[])
 
 	off -= 2048;
 	off <<= 9;
+
+	printf (" off = %ld\n", off);
 
 	fpart = open (part, O_RDONLY);
 	if (fpart < 0) {
@@ -86,7 +98,7 @@ int main (int argc, char *argv[])
 
 	if (lseek64 (fout, off, SEEK_SET) < 0)
 	{
-		printf ("Seek failed (%s) in '%s', offset %llu\n",
+		printf ("Seek failed (%s) in '%s', offset %lu\n",
 			strerror (errno), out, off);
 		printf ("Check this isn't limitation of your filesystem\n");
 		printf ("e.g. By default ext2 has a limit of 16Gb\n");

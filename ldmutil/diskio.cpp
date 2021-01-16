@@ -46,6 +46,7 @@
 #define __SECTORSIZE		512
 
 using namespace ldm;
+using namespace std;
 
 
 diskio::diskio(void)
@@ -93,28 +94,33 @@ void diskio::Close(void)
 	_open = false;
 }
 
-int diskio::GetSectorSize(void)
+u64 diskio::GetSectorSize(void)
 {
 	return __SECTORSIZE;
 }
 
-void diskio::SetPos(int sector)
+void diskio::SetPos(u64 sector)
 {
-	off_t offset = (u64)sector * __SECTORSIZE;
+	off_t offset = (u64) ( sector * __SECTORSIZE);
 	if (_readonly && offset == _pos)
 		return;
 
+//	cerr << "sector = " << sector << " __SECTORSIZE = " << __SECTORSIZE <<"\n";
+//	cerr << "sizeof(sector) = " << sizeof(sector) << "\n";
+
 	_pos = lseek(_fd, offset, SEEK_SET);
-	if (_pos != offset)
+	if (_pos != offset) {
+		cerr << _pos << " =  lseek(" << _fd << "," << offset << ",SEEK_SET)\n";
 		throw LDM_MKERROR( strerror(errno) );
+	}
 }
 
-int diskio::GetPos(void)
+u64 diskio::GetPos(void)
 {
 	return _pos / __SECTORSIZE;
 }
 
-void diskio::Write(const void* src, int nsect, int pos)
+void diskio::Write(const void* src, int nsect, u64 pos)
 {
 	if (pos != INT_MIN)
 		SetPos(pos);
@@ -132,7 +138,7 @@ void diskio::Write(const void* src, int nsect, int pos)
 	}
 }
 
-void diskio::Read(void* dest, int nsect, int pos)
+void diskio::Read(void* dest, int nsect, u64 pos)
 {
 	if (pos != INT_MIN)
 		SetPos(pos);
@@ -150,7 +156,7 @@ void diskio::Read(void* dest, int nsect, int pos)
 	}
 }
 
-int diskio::GetSize(void)
+u64 diskio::GetSize(void)
 {
 	return _size / __SECTORSIZE;
 }
