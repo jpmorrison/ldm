@@ -1,0 +1,9 @@
+
+sparse:
+
+	Create a sparse disk image for test
+
+ldminfo
+	Moved to https://github.com/jpmorrison/ldminfo
+
+
