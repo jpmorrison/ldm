@@ -39,9 +39,11 @@
 #include "error.h"
 #include "diskio.h"
 
+#ifndef __CYGWIN__
 #define open	open64
 #define lseek	lseek64
 #define off_t	off64_t
+#endif
 
 #define __SECTORSIZE		512
 
@@ -64,10 +66,18 @@ void diskio::Open(const char* filename, bool readonly)
 	Close();
 
 	if (!readonly) {
-		_fd = open(filename, O_RDWR | O_CREAT | O_LARGEFILE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+#ifdef O_LARGEFILE
+		_fd = open(filename, O_RDWR | O_CREAT | O_LARGEFILE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH); // typo: O_LARGEFILE, S_IRUSR ?
+#else
+		_fd = open(filename, O_RDWR | O_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+#endif
 		_readonly = false;
 	} else {
+#ifdef O_LARGEFILE
 		_fd = open(filename, O_RDONLY | O_LARGEFILE);
+#else
+		_fd = open(filename, O_RDONLY );
+#endif
 		_readonly = true;
 	}
 
